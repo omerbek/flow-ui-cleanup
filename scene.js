@@ -6,6 +6,15 @@ const mint = '#9ef4dc';
 const amber = '#ffcb7d';
 const ink = '#152129';
 const duration = 8;
+const controls = [...document.querySelectorAll('#settings input')];
+const settings = Object.fromEntries(controls.map(input => [
+  input.id, input.type === 'number' ? Number(input.value) : input.value
+]));
+controls.forEach(input => input.addEventListener('input', () => {
+  if (input.type === 'number' && (input.value === '' || !input.validity.valid)) return;
+  settings[input.id] = input.type === 'number' ? input.valueAsNumber : input.value;
+  draw();
+}));
 
 function rect(x, y, w, h, color) {
   ctx.fillStyle = color;
@@ -33,10 +42,10 @@ const range = length => Array.from({length}, (_, index) => index);
 function render(t) {
   const p = smooth((t - 2) / 2);
   ctx.globalAlpha = 1 - p;
-  range(6).forEach(i => rect(54 + i * 102, 135, 90, 135, `hsl(${i * 54}, 45%, 34%)`));
+  range(settings.tiles).forEach(i => rect(54 + i * 102, 135, 90, 135, `hsl(${i * 54}, 45%, 34%)`));
   ctx.globalAlpha = 1;
-  label('Debi', 52, 132 + 55 * p, 22);
-  label('42 L/s', 52, 208 + 55 * p, 54);
+  label(settings.heading, 52, 132 + 55 * p, 22);
+  label(`${settings.value} L/s`, 52, 208 + 55 * p, 54);
   line([[54, 289], [665, 289]], mint);
 }
 
@@ -78,6 +87,13 @@ play.addEventListener('click', () => {
 seek.addEventListener('input', () => {
   position = Number(seek.value);
   draw();
+});
+
+document.querySelector('#save').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'flow-ui-cleanup.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 });
 
 draw();
